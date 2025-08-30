@@ -1,0 +1,37 @@
+# Per-Flex-ity Backend - LangChain-Powered AI Search System
+# Production dependencies for LangChain pipeline
+
+# Core Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# Database  
+sqlalchemy[asyncio]>=2.0.23
+aiosqlite>=0.19.0
+
+# LangChain Stack (Complete Integration)
+langchain>=0.3.27
+langchain-community>=0.3.29
+langchain-ollama>=0.3.7
+langchain-text-splitters>=0.3.9
+
+# Search and Content Processing
+duckduckgo-search>=8.1.1
+beautifulsoup4>=4.12.2
+selectolax>=0.3.17
+lxml>=6.0.1
+
+# ML and Embeddings
+rapidfuzz>=3.9.0
+numpy>=2.3.2
+scikit-learn>=1.5.0
+
+# HTTP and Networking
+httpx>=0.28.1
+primp>=0.15.0
+
+# Configuration
+pydantic>=2.11.7
+pydantic-settings>=2.10.1
+python-dotenv>=1.0.0
