@@ -113,8 +113,7 @@ open http://localhost:3000
 - **Conversation Context**: Multi-turn chat with proper context propagation
 
 ## Architecture
-
-![System Architecture](image.png)
+![System Architecture](assets/image.png)
 
 ## Configuration
 
