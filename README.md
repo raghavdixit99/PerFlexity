@@ -44,7 +44,7 @@ npm install
 npm run dev  # Runs on http://localhost:3000
 ```
 
-## 🧪 Testing Commands
+## Testing Commands
 
 ### Quick Tests
 ```bash
@@ -71,7 +71,7 @@ cd backend && python -m pytest tests/ -v
 - **Streaming**: Server-sent events with real-time tokens
 - **Tests**: All unit tests should pass ✅
 
-### ✅ System Validation
+### System Validation
 
 After setup, verify everything works:
 
@@ -95,7 +95,7 @@ open http://localhost:3000
 # Should load: React chat interface
 ```
 
-## 🎯 Key Features
+## Key Features
 
 ### **Advanced Query Processing**
 - **Query Decomposition**: Complex queries automatically split into targeted sub-questions
@@ -112,11 +112,11 @@ open http://localhost:3000
 - **Zero-Cost Stack**: Complete local inference with Ollama (no API keys)
 - **Conversation Context**: Multi-turn chat with proper context propagation
 
-## 🛠 Architecture
+## Architecture
 
 ![System Architecture](image.png)
 
-## 🔧 Configuration
+## Configuration
 
 All configuration via environment variables:
 
@@ -128,7 +128,7 @@ CVA_CLAIM_MODEL=qwen2.5:1.5b-instruct
 EMBEDDING_MODEL=nomic-embed-text
 ```
 
-## 📋 API Usage
+## API Usage
 
 ### **Basic Query**
 ```bash
@@ -182,32 +182,6 @@ curl -X DELETE "http://localhost:8000/api/conversations/{conversation_id}"
   "limit": 50
 }
 ```
-
-
-## 🚨 Troubleshooting
-
-**"Cannot connect to Ollama"**
-```bash
-ollama serve  # Start Ollama service
-```
-
-**"Model not found"**  
-```bash
-ollama pull qwen2.5:3b-instruct-q4_0
-ollama pull nomic-embed-text
-```
-
-**"Module not found"**
-```bash
-pip install -r requirements.txt --upgrade
-```
-
-## 🏆 Performance
-
-- **Query Decomposition**: ~2s for complex query analysis  
-- **First Token**: <1s for simple queries, <3s for complex
-- **CVA Processing**: ~2-5s background verification
-- **Total Pipeline**: <15s for complete processing with CVA
 
 Built with LangChain for production reliability and Ollama for zero-cost local inference.
 
