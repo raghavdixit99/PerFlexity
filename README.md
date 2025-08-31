@@ -26,7 +26,7 @@ cd PerFlexity
 ```bash
 # 1. Install and start Ollama
 curl -fsSL https://ollama.ai/install.sh | sh
-ollama serve &
+ollama serve
 
 # 2. Download models
 ollama pull qwen2.5:3b-instruct-q4_0    # Main chat model (~1.7GB)
@@ -69,7 +69,7 @@ cd backend && python -m pytest tests/ -v
 - **Health**: `{"status":"healthy","services":{"overall":true}}`
 - **Response**: JSON with response, sources, and claims  
 - **Streaming**: Server-sent events with real-time tokens
-- **Tests**: All unit tests should pass ✅
+- **Tests**: All unit tests should pass
 
 ### System Validation
 
