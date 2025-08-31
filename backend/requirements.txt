@@ -21,6 +21,7 @@ duckduckgo-search>=8.1.1
 beautifulsoup4>=4.12.2
 selectolax>=0.3.17
 lxml>=6.0.1
+ddgs>=9.5.4
 
 # ML and Embeddings
 rapidfuzz>=3.9.0

@@ -132,9 +132,14 @@ export default function App() {
   // Check backend connection
   const checkConnection = async () => {
     try {
+      console.log("Checking backend connection to:", `${apiUrl}/health`)
       const response = await fetch(`${apiUrl}/health`)
+      console.log("Health check response:", response.status, response.ok)
+      
       const isConnected = response.ok
       setBackendConnected(isConnected)
+      
+      console.log("Backend connected state set to:", isConnected)
 
       if (!isConnected) {
         toast.error("Cannot connect to backend server. Please make sure your Python backend is running.")
@@ -143,7 +148,8 @@ export default function App() {
       }
 
       return isConnected
-    } catch {
+    } catch (error) {
+      console.error("Backend connection error:", error)
       setBackendConnected(false)
       toast.error("Cannot connect to backend server. Please make sure your Python backend is running.")
       return false
