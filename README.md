@@ -2,6 +2,8 @@
 
 AI-powered search with real-time claim verification. Built with LangChain + Ollama for zero-cost local inference.
 
+<video controls src="assets/perflexity demo.mov" title="demo" onloadedmetadata="this.playbackRate=1.5"></video>
+
 ## ⚡ Quick Start
 
 ### One-Command Setup
