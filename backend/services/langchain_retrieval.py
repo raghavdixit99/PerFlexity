@@ -1,6 +1,5 @@
 """LangChain-based retrieval service - replaces buggy custom implementation."""
 
-import asyncio
 import logging
 import time
 from typing import List, Optional
@@ -34,7 +33,7 @@ class LangChainRetrievalService:
     async def initialize(self):
         """Initialize LangChain components."""
         try:
-            logger.info("🦜 Initializing LangChain retrieval service...")
+            logger.info("Initializing LangChain retrieval service...")
             
             # Initialize Ollama embeddings (proper LangChain integration)
             self.embeddings = OllamaEmbeddings(
@@ -55,14 +54,14 @@ class LangChainRetrievalService:
             test_time = time.time() - test_start
             
             if test_vector and len(test_vector) > 0:
-                logger.info(f"✅ LangChain embeddings ready: {len(test_vector)} dims in {test_time*1000:.1f}ms")
+                logger.info(f"LangChain embeddings ready: {len(test_vector)} dims in {test_time*1000:.1f}ms")
                 return True
             else:
-                logger.error("❌ LangChain embeddings test failed")
+                logger.error("LangChain embeddings test failed")
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ LangChain retrieval initialization failed: {e}")
+            logger.error(f"LangChain retrieval initialization failed: {e}")
             return False
     
     async def retrieve_passages(
@@ -114,7 +113,7 @@ class LangChainRetrievalService:
                 all_splits = all_splits[:self.max_chunks_per_query]
                 logger.info(f"⚡ Limited to {self.max_chunks_per_query} chunks for performance")
             
-            logger.info(f"✂️ Split into {len(all_splits)} total chunks")
+            logger.info(f"Split into {len(all_splits)} total chunks")
             
             if not all_splits:
                 logger.warning("No chunks created from documents")
@@ -123,7 +122,7 @@ class LangChainRetrievalService:
             # Create vector store with LangChain (handles batch embeddings)
             chunk_texts = [split.page_content for split in all_splits]
             
-            logger.info(f"🧠 Creating vector store with {len(chunk_texts)} chunks...")
+            logger.info(f"Creating vector store with {len(chunk_texts)} chunks...")
             vector_start = time.time()
             
             self.vectorstore = InMemoryVectorStore.from_texts(
@@ -133,14 +132,14 @@ class LangChainRetrievalService:
             )
             
             vector_time = time.time() - vector_start
-            logger.info(f"✅ Vector store created in {vector_time:.2f}s")
+            logger.info(f"Vector store created in {vector_time:.2f}s")
             
             # Retrieve most relevant passages
             retrieval_start = time.time()
             relevant_docs = self.vectorstore.similarity_search_with_score(query, k=max_passages)
             retrieval_time = time.time() - retrieval_start
             
-            logger.info(f"🎯 Retrieved {len(relevant_docs)} passages in {retrieval_time*1000:.1f}ms")
+            logger.info(f"Retrieved {len(relevant_docs)} passages in {retrieval_time*1000:.1f}ms")
             
             # Convert back to our Passage format
             passages = []
@@ -153,12 +152,12 @@ class LangChainRetrievalService:
                 ))
             
             total_time = time.time() - start_time
-            logger.info(f"✅ LangChain retrieval completed in {total_time:.2f}s")
+            logger.info(f"LangChain retrieval completed in {total_time:.2f}s")
             
             return passages
             
         except Exception as e:
-            logger.error(f"❌ LangChain retrieval failed: {e}")
+            logger.error(f"LangChain retrieval failed: {e}")
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
             raise RetrievalError(f"LangChain retrieval failed: {str(e)}")
@@ -168,7 +167,7 @@ class LangChainRetrievalService:
         try:
             self.vectorstore = None
             # LangChain handles cleanup automatically
-            logger.info("🧹 LangChain retrieval cleaned up")
+            logger.info("LangChain retrieval cleaned up")
         except Exception as e:
             logger.warning(f"Cleanup error: {e}")
 

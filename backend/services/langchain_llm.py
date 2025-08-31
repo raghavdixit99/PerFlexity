@@ -1,12 +1,11 @@
 """LangChain-based LLM service with streaming and query decomposition."""
 
-import asyncio
 import logging
 import time
 from typing import List, Optional, AsyncGenerator, Tuple, Dict, Any
 
 from langchain_ollama import ChatOllama
-from langchain.prompts import PromptTemplate, ChatPromptTemplate
+from langchain.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from models.domain import Passage
@@ -30,7 +29,7 @@ class LangChainLLMService:
     async def initialize(self):
         """Initialize LangChain LLM components."""
         try:
-            logger.info("🦜 Initializing LangChain LLM service...")
+            logger.info("Initializing LangChain LLM service...")
             
             # Main chat LLM with streaming
             self.chat_llm = ChatOllama(
@@ -51,14 +50,14 @@ class LangChainLLMService:
             # Test both models
             test_response = await self.chat_llm.ainvoke("Test")
             if test_response and test_response.content:
-                logger.info(f"✅ LangChain LLM ready: {self.main_model}")
+                logger.info(f"LangChain LLM ready: {self.main_model}")
                 return True
             else:
-                logger.error("❌ LangChain LLM test failed")
+                logger.error("LangChain LLM test failed")
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ LangChain LLM initialization failed: {e}")
+            logger.error(f"LangChain LLM initialization failed: {e}")
             return False
 
 
@@ -69,7 +68,7 @@ class LangChainLLMService:
             if len(query.split()) < 6 and " and " not in query.lower() and "?" not in query[:-1]:
                 return [query]  # Simple query, no decomposition needed
             
-            logger.info(f"🧠 Decomposing complex query: {query}")
+            logger.info(f"Decomposing complex query: {query}")
             
             decomposition_prompt = ChatPromptTemplate.from_messages([
                 SystemMessage(content="You are a query decomposition expert. Break complex questions into 2-3 simpler sub-questions. use the provided context for clear understanding."),
@@ -97,7 +96,7 @@ Return only the sub-questions, numbered 1. 2. 3. etc. and separated by new lines
             if not sub_questions:
                 sub_questions = [query]  # Fallback
 
-            logger.info(f"✅ Decomposed into {len(sub_questions)} sub-questions : {sub_questions} \n\n")
+            logger.info(f"Decomposed into {len(sub_questions)} sub-questions : {sub_questions} \n\n")
             return sub_questions[:3]  # Max 3 sub-questions
             
         except Exception as e:
@@ -115,7 +114,7 @@ Return only the sub-questions, numbered 1. 2. 3. etc. and separated by new lines
             if not self.chat_llm:
                 await self.initialize()
             
-            logger.info(f"🤖 Starting LangChain streaming generation for: {query[:50]}...")
+            logger.info(f"Starting LangChain streaming generation for: {query[:50]}...")
             
             # Prepare context from passages
             source_context = ""
@@ -178,10 +177,10 @@ Provide a comprehensive explanation without formal citations or academic style."
                 yield token, metadata
             
             total_time = time.time() - start_time
-            logger.info(f"✅ LangChain generation completed: {token_count} tokens in {total_time:.2f}s")
+            logger.info(f"LangChain generation completed: {token_count} tokens in {total_time:.2f}s")
             
         except Exception as e:
-            logger.error(f"❌ LangChain generation failed: {e}")
+            logger.error(f"LangChain generation failed: {e}")
             yield None, {"error": f"Generation failed: {str(e)}"}
     
     async def generate_simple_response(self, query: str) -> str:

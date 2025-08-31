@@ -1,9 +1,9 @@
 """LangChain-based CVA service with structured output and Pydantic validation."""
 
-import asyncio
 import logging
 import time
 from typing import List, Optional, Dict, Any
+import json
 from pydantic import BaseModel, Field
 
 from langchain_ollama import ChatOllama
@@ -12,7 +12,6 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.output_parsers import PydanticOutputParser
 
 from models.domain import Passage, AtomicClaim, EvidenceSpan, CVAResult
-from core.exceptions import CVAError
 from core.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -63,7 +62,7 @@ class LangChainCVAService:
     async def initialize(self):
         """Initialize LangChain CVA components."""
         try:
-            logger.info("🦜 Initializing LangChain CVA service...")
+            logger.info("Initializing LangChain CVA service...")
             
             # Initialize claim extraction LLM
             self.claim_extraction_llm = ChatOllama(
@@ -84,26 +83,25 @@ class LangChainCVAService:
             # Test both models
             test_response = await self.claim_extraction_llm.ainvoke("Test")
             if test_response and test_response.content:
-                logger.info("✅ LangChain CVA ready: Both models initialized")
+                logger.info("LangChain CVA ready: Both models initialized")
                 return True
             else:
-                logger.error("❌ LangChain CVA test failed")
+                logger.error("LangChain CVA test failed")
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ LangChain CVA initialization failed: {e}")
+            logger.error(f"LangChain CVA initialization failed: {e}")
             return False
     
     async def verify_claims_background(
         self, 
         response_text: str, 
         passages: List[Passage], 
-        timeout_seconds: int = 10  # Increased timeout for LangChain processing
     ) -> CVAResult:
         """Advanced CVA using LangChain structured output."""
         try:
             start_time = time.time()
-            logger.info(f"🦜 Starting LangChain CVA analysis...")
+            logger.info("Starting LangChain CVA analysis...")
             
             if not self.claim_extraction_llm or not self.claim_verification_llm:
                 await self.initialize()
@@ -119,13 +117,13 @@ class LangChainCVAService:
             
             processing_time = (time.time() - start_time) * 1000
             cva_result.processing_time_ms = processing_time
-            
-            logger.info(f"✅ LangChain CVA completed: {len(verified_claims)} claims in {processing_time:.1f}ms")
-            
+
+            logger.info(f"LangChain CVA completed: {len(verified_claims)} claims in {processing_time:.1f}ms")
+
             return cva_result
             
         except Exception as e:
-            logger.error(f"❌ LangChain CVA failed: {e}")
+            logger.error(f"LangChain CVA failed: {e}")
             processing_time = (time.time() - start_time) * 1000
             return self._create_error_result(processing_time, str(e))
     
@@ -159,9 +157,9 @@ JSON format: {{"claims": ["Specific fact 1", "Specific fact 2", "Specific fact 3
             # Use LangChain structured output
             chain = extraction_prompt | self.claim_extraction_llm | parser
             result = await chain.ainvoke({})
-            
-            logger.info(f"✅ LangChain extracted {len(result.claims)} claims")
-            
+
+            logger.info(f"LangChain extracted {len(result.claims)} claims")
+
             # Convert to our format
             claims_data = []
             for i, claim_text in enumerate(result.claims):
@@ -176,7 +174,7 @@ JSON format: {{"claims": ["Specific fact 1", "Specific fact 2", "Specific fact 3
             return claims_data
             
         except Exception as e:
-            logger.error(f"❌ LangChain claim extraction failed: {e}")
+            logger.error(f"LangChain claim extraction failed: {e}")
             return []
     
     async def _verify_claims_with_evidence(
@@ -196,20 +194,10 @@ JSON format: {{"claims": ["Specific fact 1", "Specific fact 2", "Specific fact 3
                 source_id = f"source_{i+1}"
                 evidence_context += f"Source {i+1} ({passage.source_title}):\n{passage.text[:400]}...\n\n"
                 passage_map[source_id] = passage
-            
-            # Define verification schema (fixed based on test results)
-            class ClaimVerification(BaseModel):
-                verified: bool = Field(description="Whether the claim is supported by evidence")
-                confidence: float = Field(ge=0.0, le=1.0, description="Confidence in verification")
-                supporting_evidence: str = Field(description="Single text snippet that supports the claim")
-                reasoning: str = Field(description="Brief explanation of the verification decision")
-            
-            parser = PydanticOutputParser(pydantic_object=ClaimVerification)
-            
-            # Simplified verification for speed and accuracy
+        
             for i, claim_data in enumerate(claims_data[:3]):  # Limit to 3 claims for speed
                 try:
-                    # Use simplified evidence matching (faster than LLM verification)
+                    # Use simplified evidence matching (faster than LLM verification, previously tried)
                     evidence_spans = self._find_evidence_for_claim(claim_data['text'], passages)
                     
                     # Calculate confidence based on evidence quality
@@ -227,10 +215,10 @@ JSON format: {{"claims": ["Specific fact 1", "Specific fact 2", "Specific fact 3
                     )
                     
                     verified_claims.append(verified_claim)
-                    logger.info(f"✅ Claim {i+1}: {confidence:.2f} confidence, {len(evidence_spans)} evidence spans")
+                    logger.info(f"Claim {i+1}: {confidence:.2f} confidence, {len(evidence_spans)} evidence spans")
                     
                 except Exception as e:
-                    logger.warning(f"❌ Claim {i+1} processing failed: {e}")
+                    logger.warning(f"Claim {i+1} processing failed: {e}")
                     # Add unverified claim
                     verified_claims.append(AtomicClaim(
                         id=claim_data["id"],
@@ -244,24 +232,20 @@ JSON format: {{"claims": ["Specific fact 1", "Specific fact 2", "Specific fact 3
             return verified_claims
             
         except Exception as e:
-            logger.error(f"❌ Claims verification process failed: {e}")
+            logger.error(f"Claims verification process failed: {e}")
             return []
     
-    async def _verify_single_claim(self, claim_data: Dict[str, Any], verification_prompt, parser) -> AtomicClaim:
+    async def _verify_single_claim(self, claim_data: Dict[str, Any]) -> AtomicClaim:
         """Verify a single claim using LangChain structured output."""
         try:
-            # Use simplified verification (no parser for reliability)
             simple_prompt = f"""Verify this claim with evidence. Respond with valid JSON only:
 
 CLAIM: {claim_data['text'][:200]}...
 
 Respond: {{"verified": true, "confidence": 0.8, "supporting_evidence": "brief quote", "reasoning": "explanation"}}"""
             
-            # Use simple LLM call without parser for reliability
             response = await self.claim_verification_llm.ainvoke(simple_prompt)
             
-            # Simple JSON parsing
-            import json
             try:
                 response_text = response.content.strip()
                 if "{" in response_text:
@@ -408,6 +392,7 @@ Respond: {{"verified": true, "confidence": 0.8, "supporting_evidence": "brief qu
     
     def _create_error_result(self, processing_time_ms: float, error_msg: str) -> CVAResult:
         """Create error result for failed CVA."""
+        _ = error_msg  # Pylance: parameter preserved for API compatibility
         return CVAResult(
             claims=[],
             total_claims=0,

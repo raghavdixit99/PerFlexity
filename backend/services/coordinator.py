@@ -9,7 +9,7 @@ from models.domain import ConversationContext
 from core.config import get_settings
 from core.database import get_db_session
 from .langchain_search import get_langchain_search_service
-from .db import get_conversation_context, save_message
+from .db import get_conversation_context
 from .langchain_retrieval import get_langchain_retrieval_service
 from .langchain_llm import get_langchain_llm_service
 from .langchain_cva import get_langchain_cva_service
@@ -58,7 +58,7 @@ class ChatCoordinator:
             (token, metadata) tuples for streaming response
         """
         pipeline_start = time.time()
-        logger.info(f"🚀 PIPELINE START: {query[:50]}... (cva={enable_cva})")
+        logger.info(f"PIPELINE START: {query[:50]}... (cva={enable_cva})")
         
         context_task = None
         search_task = None
@@ -67,7 +67,7 @@ class ChatCoordinator:
             
             # Check if query needs decomposition (always use LangChain)
             if self._should_decompose_query(query):
-                logger.info("🧠 Complex query detected - using decomposition")
+                logger.info("Complex query detected - using decomposition")
                 search_task = asyncio.create_task(
                     self._search_with_decomposition(query, context=context, max_results=min(context_limit * 2, 10))
                 )
@@ -94,7 +94,7 @@ class ChatCoordinator:
             
             # Phase 2: LangChain Retrieval
             try:
-                logger.info("🦜 PHASE 2: Starting LangChain retrieval service")
+                logger.info("PHASE 2: Starting LangChain retrieval service")
                 
                 # Initialize LangChain retrieval lazily
                 if self.langchain_retrieval is None:
@@ -102,12 +102,12 @@ class ChatCoordinator:
                     await self.langchain_retrieval.initialize()
                 
                 passages = await self.langchain_retrieval.retrieve_passages(query, documents, context_limit)
-                logger.info(f"✅ LangChain retrieval completed: {len(passages)} passages")
+                logger.info(f"LangChain retrieval completed: {len(passages)} passages")
                     
             except Exception as e:
-                logger.error(f"❌ LangChain retrieval failed: {e}, using fallback")
+                logger.error(f"LangChain retrieval failed: {e}, using fallback")
                 passages = self._documents_to_passages(documents[:context_limit])
-                logger.info(f"📄 Using {len(passages)} document excerpts as fallback")
+                logger.info(f"Using {len(passages)} document excerpts as fallback")
             
             if not passages:
                 logger.warning("No passages retrieved, using fallback response") 
@@ -117,7 +117,7 @@ class ChatCoordinator:
             
             
             # Phase 3: LangChain LLM Generation
-            logger.info("🤖 PHASE 3: Starting LangChain LLM generation")
+            logger.info("PHASE 3: Starting LangChain LLM generation")
             first_token_time = time.time()
             
             # Initialize LangChain LLM lazily
@@ -303,7 +303,7 @@ class ChatCoordinator:
     async def _run_background_cva(self, response_text: str, passages: List) -> Optional[Any]:
         """Run LangChain CVA analysis in background with timeout."""
         try:
-            logger.info("🦜 Starting LangChain CVA for structured claim verification")
+            logger.info("Starting LangChain CVA for structured claim verification")
             
             # Initialize LangChain CVA lazily
             if self.langchain_cva is None:
@@ -312,12 +312,12 @@ class ChatCoordinator:
             
             return await asyncio.wait_for(
                 self.langchain_cva.verify_claims_background(
-                    response_text, passages, timeout_seconds=self.cva_background_timeout_s
+                    response_text, passages
                 ),
                 timeout=self.cva_background_timeout_s + 2.0  # Extra buffer for LangChain processing
             )
         except Exception as e:
-            logger.error(f"❌ LangChain CVA failed: {e}")
+            logger.error(f"LangChain CVA failed: {e}")
             return None
 
     def _format_cva_metadata(self, cva_result) -> Dict[str, Any]:
@@ -481,7 +481,7 @@ class ChatCoordinator:
     async def _search_with_decomposition(self, query: str, context: Optional[str], max_results: int) -> List:
         """Search using query decomposition for complex queries."""
         try:
-            logger.info(f"🧠 Decomposing complex query: {query}")
+            logger.info(f"Decomposing complex query: {query}")
             
             # Initialize LangChain LLM for decomposition
             if self.langchain_llm is None:

@@ -1,6 +1,5 @@
 """Complete LangChain search service using async DDGS + AsyncHtmlLoader."""
 
-import asyncio
 import logging
 import time
 from typing import List, Optional
@@ -10,7 +9,7 @@ from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_community.document_loaders import AsyncHtmlLoader
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 
-from models.domain import SearchResult, Document
+from models.domain import Document
 from core.exceptions import SearchError
 from core.config import get_settings
 
@@ -49,7 +48,7 @@ class LangChainSearchService:
         """Complete async search and fetch using LangChain components."""
         try:
             start_time = time.time()
-            logger.info(f"🦜 LangChain DDGS search: {query[:50]}...")
+            logger.info(f"LangChain DDGS search: {query[:50]}...")
             
             # Step 1: Async DDGS search using LangChain
             search_results = await self.ddgs_search.ainvoke(query)
@@ -111,7 +110,7 @@ class LangChainSearchService:
     ) -> List[Document]:
         """Extract content using hybrid approach - LangChain + improved cleaning."""
         try:
-            logger.info(f"🦜 Hybrid content extraction: {len(urls)} URLs")
+            logger.info(f"Hybrid content extraction: {len(urls)} URLs")
             
             # Use LangChain AsyncHtmlLoader but with better cleaning
             loader = AsyncHtmlLoader(urls)
@@ -152,19 +151,16 @@ class LangChainSearchService:
                             }
                         ))
                         
-                        logger.debug(f"✅ Cleaned: {metadata.get('title', 'Unknown')[:40]}... ({len(clean_content)} chars)")
+                        logger.debug(f"Cleaned: {metadata.get('title', 'Unknown')[:40]}... ({len(clean_content)} chars)")
                     else:
-                        logger.debug(f"⏭️ Skipped short content: {len(clean_content)} chars")
-                        
+                        logger.debug(f"Skipped short content: {len(clean_content)} chars")
                 except Exception as e:
-                    logger.warning(f"❌ Document processing failed: {e}")
+                    logger.warning(f"Document processing failed: {e}")
                     continue
-            
-            logger.info(f"📊 Final result: {len(documents)} cleaned documents")
             return documents
             
         except Exception as e:
-            logger.error(f"❌ Content extraction failed: {e}")
+            logger.error(f"Content extraction failed: {e}")
             return []
     
     def _clean_html_content(self, raw_content: str) -> str:
