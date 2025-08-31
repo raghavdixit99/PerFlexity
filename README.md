@@ -7,7 +7,7 @@ AI-powered search with real-time claim verification. Built with LangChain + Olla
 ### One-Command Setup
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/raghavdixit99/PerFlexity.git
 cd per-flex-ity
 ./setup.sh  # Automated setup - installs everything!
 ```
