@@ -12,7 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 @pytest.mark.asyncio
 async def test_langchain_search_service():
     """Test LangChain DDGS search functionality."""
-    from services.langchain_search import LangChainSearchService
+    from services.search import LangChainSearchService
     
     # Simple test without complex mocking
     service = LangChainSearchService()
@@ -31,13 +31,13 @@ async def test_langchain_search_service():
 @pytest.mark.asyncio 
 async def test_langchain_retrieval_service():
     """Test LangChain retrieval with text splitting."""
-    from services.langchain_retrieval import LangChainRetrievalService
+    from services.retrieval import LangChainRetrievalService
     from models.domain import Document
     
     # Mock LangChain components
-    with patch('services.langchain_retrieval.OllamaEmbeddings') as mock_embeddings, \
-         patch('services.langchain_retrieval.RecursiveCharacterTextSplitter') as mock_splitter, \
-         patch('services.langchain_retrieval.InMemoryVectorStore') as mock_store:
+    with patch('services.retrieval.OllamaEmbeddings') as mock_embeddings, \
+         patch('services.retrieval.RecursiveCharacterTextSplitter') as mock_splitter, \
+         patch('services.retrieval.InMemoryVectorStore') as mock_store:
         
         # Mock embeddings
         mock_embeddings.return_value.embed_query = AsyncMock(return_value=[0.1] * 768)
@@ -79,11 +79,11 @@ async def test_langchain_retrieval_service():
 @pytest.mark.asyncio
 async def test_langchain_cva_service():
     """Test LangChain CVA with structured output."""
-    from services.langchain_cva import LangChainCVAService
+    from services.cva import LangChainCVAService
     from models.domain import Passage
     
     # Mock LangChain CVA components
-    with patch('services.langchain_cva.ChatOllama') as mock_chat:
+    with patch('services.cva.ChatOllama') as mock_chat:
         # Mock claim extraction
         mock_response = Mock()
         mock_response.content = '{"claims": ["GGML is a tensor library", "GGML was created by Georgi Gerganov"]}'

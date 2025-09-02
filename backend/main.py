@@ -46,12 +46,9 @@ async def lifespan(app: FastAPI):
         logger.error(f"Database initialization failed: {e}")
         raise
     
-    # Initialize services with warmup
+    # Initialize services
     try:
         orchestrator = get_orchestrator()
-        
-        # Skip warmup to avoid sentence-transformers hanging on M2 Pro
-        # Models will load on first request instead
         
         # Run basic health check
         health_status = await orchestrator.health_check()
@@ -113,42 +110,6 @@ def create_app() -> FastAPI:
             "docs_url": "/docs" if settings.debug else "Documentation disabled in production"
         }
     
-    # Warmup endpoint for debugging
-    @app.post("/warmup", tags=["Health"])
-    async def warmup():
-        """Warmup services manually."""
-        try:
-            orchestrator = get_orchestrator()
-            warmup_status = await orchestrator.warmup()
-            
-            if warmup_status.get("success", False):
-                return JSONResponse(
-                    content={
-                        "status": "success",
-                        "message": f"Services warmed up successfully in {warmup_status.get('warmup_time_s', 0):.2f}s",
-                        "details": warmup_status
-                    },
-                    status_code=200
-                )
-            else:
-                return JSONResponse(
-                    content={
-                        "status": "partial_failure",
-                        "message": "Service warmup had issues",
-                        "details": warmup_status
-                    },
-                    status_code=206
-                )
-                
-        except Exception as e:
-            logger.error(f"Manual warmup failed: {e}")
-            return JSONResponse(
-                content={
-                    "status": "error",
-                    "message": f"Warmup failed: {str(e)}"
-                },
-                status_code=500
-            )
 
     # Health check endpoint
     @app.get("/health", tags=["Health"])

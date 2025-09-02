@@ -69,7 +69,6 @@ async def save_message(
     conversation_id: str, 
     role: str, 
     content: str,
-    metadata: Optional[dict] = None
 ) -> str:
     """Save a message to the conversation in a single atomic transaction."""
     try:
@@ -79,8 +78,7 @@ async def save_message(
             conversation_id=conversation_id,
             role=role,
             content=content,
-            created_at=datetime.now(timezone.utc),
-            metadata=metadata or {}
+            created_at=datetime.now(timezone.utc)
         )
         db.add(message)
         

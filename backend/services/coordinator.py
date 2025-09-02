@@ -399,48 +399,6 @@ class ChatCoordinator:
             return None
 
 
-    async def warmup(self) -> Dict[str, bool]:
-        """Warm up all services by pre-initializing models and connections."""
-        logger.info("Starting service warmup...")
-        warmup_start = time.time()
-        
-        try:
-            # Pre-initialize retrieval service (most time-consuming)
-            if not self._retrieval_initialized:
-                logger.info("Warming up retrieval service...")
-                await asyncio.wait_for(
-                    self.retrieval_service.initialize(),
-                    timeout=15.0
-                )
-                self._retrieval_initialized = True
-                logger.info("Retrieval service warmed up")
-            
-            # Warm up LLM service
-            logger.info("Warming up LLM service...")
-            await asyncio.wait_for(
-                self.llm_service.health_check(),
-                timeout=10.0
-            )
-            logger.info("LLM service warmed up")
-            
-            warmup_time = time.time() - warmup_start
-            logger.info(f"Service warmup completed in {warmup_time:.2f}s")
-            
-            return {
-                "retrieval_initialized": self._retrieval_initialized,
-                "warmup_time_s": warmup_time,
-                "success": True
-            }
-            
-        except Exception as e:
-            warmup_time = time.time() - warmup_start
-            logger.error(f"Service warmup failed after {warmup_time:.2f}s: {e}")
-            return {
-                "retrieval_initialized": self._retrieval_initialized,
-                "warmup_time_s": warmup_time,
-                "success": False,
-                "error": str(e)
-            }
 
     async def health_check(self) -> Dict[str, bool]:
         """Check health of all pipeline services with fast timeouts."""

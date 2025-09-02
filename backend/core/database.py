@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, selectinload
 from contextlib import asynccontextmanager
-from typing import List, Optional
 from .config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -60,57 +59,6 @@ class Message(Base):
     )
 
 
-# In-memory document cache for vector retrieval
-class DocumentCache:
-    """Simple in-memory document cache with vector storage."""
-    
-    def __init__(self, max_size: int = 1000):
-        self.max_size = max_size
-        self.cache = {}  # url -> {content, title, vector, timestamp}
-        self.access_order = []  # For LRU eviction
-    
-    def get(self, url: str) -> Optional[dict]:
-        """Get document from cache."""
-        if url in self.cache:
-            # Update access order
-            if url in self.access_order:
-                self.access_order.remove(url)
-            self.access_order.append(url)
-            return self.cache[url]
-        return None
-    
-    def put(self, url: str, content: str, title: str, vector: List[float]):
-        """Store document in cache."""
-        # Evict oldest if at capacity
-        if len(self.cache) >= self.max_size and url not in self.cache:
-            oldest_url = self.access_order.pop(0)
-            del self.cache[oldest_url]
-        
-        # Store document
-        self.cache[url] = {
-            "content": content,
-            "title": title,
-            "vector": vector,
-            "timestamp": datetime.now(timezone.utc)
-        }
-        
-        # Update access order
-        if url in self.access_order:
-            self.access_order.remove(url)
-        self.access_order.append(url)
-    
-    def clear(self):
-        """Clear all cached documents."""
-        self.cache.clear()
-        self.access_order.clear()
-    
-    def size(self) -> int:
-        """Get current cache size."""
-        return len(self.cache)
-
-
-# Global document cache
-document_cache = DocumentCache()
 
 
 async def init_database():
@@ -171,7 +119,8 @@ async def health_check() -> bool:
     try:
         async with get_db_session() as session:
             # Simple query to test connection
-            from sqlalchemy import text; await session.execute(text("SELECT 1"))
+            from sqlalchemy import text
+            await session.execute(text("SELECT 1"))
         return True
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
